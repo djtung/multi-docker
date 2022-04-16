@@ -1,0 +1,20 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t djontung/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true djontung/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t djontung/multi-client ./client
+  - docker build -t djontung/multi-nginx ./nginx
+  - docker build -t djontung/multi-server ./server
+  - docker build -t djontung/multi-worker ./worker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push djontung/multi-client
+  - docker push djontung/multi-nginx 
+  - docker push djontung/multi-server
+  - docker push djontung/multi-worker
